@@ -23,18 +23,25 @@ def get_user_input():
 def calculate_daily_budget(budget, days):
     return budget/days
 
+def trip_categories():
+    return [
+        "Backpacker",
+        "Standard",
+        "Luxury"
+    ]
+
 def get_trip_category(budget):
     if budget > 1000 and budget <= 3000:
-        return "Standard"
+        return trip_categories()[1]
     elif budget > 3000:
-        return "Luxury"
+        return trip_categories()[2]
 
-    return "Backpacker"
+    return trip_categories()[0]
 
-def transport_recommendation(category):
-    if category.lower() == "backpacker":
+def transport_recommendation(travel_style):
+    if travel_style.lower() == "backpacker":
         return "Bus" 
-    elif category.lower() == "standard":
+    elif travel_style.lower() == "family":
         return "Train"
     else:
         return "Flight"
