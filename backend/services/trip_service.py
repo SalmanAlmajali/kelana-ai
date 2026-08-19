@@ -30,6 +30,14 @@ def trip_categories():
         "Luxury"
     ]
 
+def trip_transportations():
+    return [
+        "Bus",
+        "Train",
+        "Flight"
+    ]
+
+
 def get_trip_category(budget):
     if budget > 1000 and budget <= 3000:
         return trip_categories()[1]
@@ -40,11 +48,11 @@ def get_trip_category(budget):
 
 def transport_recommendation(travel_style):
     if travel_style.lower() == "backpacker":
-        return "Bus" 
+        return trip_transportations()[0] 
     elif travel_style.lower() == "family":
-        return "Train"
+        return trip_transportations()[1] 
     else:
-        return "Flight"
+        return trip_transportations()[2]
 
 def get_travel_season(month):
     if month.lower() == "december":
@@ -54,15 +62,15 @@ def get_travel_season(month):
     else:
         return "Regular Season"
 
-def get_recommended_places(destination_list):
+def get_recommended_places(destination = None):
     recommended_places = {
         "Japan": ["Tokyo Tower", "Shibuya", "Mount Fuji"],
         "Korea": ["City Center", "Local Market", "Popular Landmark"]
     }
+    
 
-    for dest in destination_list:
-        places = recommended_places.get(dest, ["Lorem Attraction 1", "Ipsum Attraction 2", "Dolor Attraction 3"])
-        print(f"--- {dest} ---")
-        for place in places:
-            print(f"- {place}")
-        print()
+    if (destination is not None):
+        places = recommended_places.get(destination, ["Lorem Attraction 1", "Ipsum Attraction 2", "Dolor Attraction 3"])
+        return places
+    
+    return recommended_places

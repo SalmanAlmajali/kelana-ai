@@ -4,7 +4,9 @@ from services.trip_service import (
     calculate_daily_budget,
     get_trip_category,
     transport_recommendation,
-    trip_categories
+    trip_categories,
+    get_recommended_places,
+    trip_transportations
 )
 
 class TripRequest(BaseModel):
@@ -42,6 +44,10 @@ def create_trip(request: TripRequest):
         request.travel_style
     )
 
+    recommended_places = get_recommended_places(
+        request.destination
+    )
+
     return {
         "destination" : request.destination,
         "days": request.days,
@@ -49,8 +55,17 @@ def create_trip(request: TripRequest):
         "daily_budget" : daily_budget,
         "category" : category,
         "recommendation_transport": recommendation_transport,
+        "recommended_places": recommended_places,
     }
 
 @app.get("/api/v1/trip-categories")
 def get_trip_categories():
     return trip_categories()
+
+@app.get("/api/v1/recommendations")
+def get_recommendations():
+    return get_recommended_places()
+
+@app.get("/api/v1/transportations")
+def get_transportations():
+    return trip_transportations();
