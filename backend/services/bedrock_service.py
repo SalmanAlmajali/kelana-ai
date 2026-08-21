@@ -6,14 +6,19 @@ import os
 load_dotenv()
 
 prompt_template = (
-    "You are an experienced travel planner. \n"
-    "Create a {days}-day itinerary for {destination}. \n"
-    "Budget: {currency} {budget} \n"
-    "Daily Budget: {daily_budget} \n"
-    "Category: {category} \n"
-    "Travel Style: {travel_style} \n"
-    "Please give ma a local food recommendation and transportation suggestions"
-    "Give the answer with markdown format."
+    "You are an experienced traveler and excel at creating traveling plan. \n"
+    "Create a travel plan that's fun, exciting and memorable by using this given context:"
+    "Duration of traveling is {days}-day itinerary. \n"
+    "Destination of traveling is {destination}. \n"
+    "Budget of traveling {budget} in {currency} currency with {daily_budget} daily budget. \n"
+    "The category of traveling is {category} \n"
+    "The traveling style is {travel_style} \n"
+    "Please provide a recommendation for local food and transportation suggestions \n"
+    "Also make a structured daily plan following below format: \n"
+    "Morning activities: Provide 2-3 morning activities per day \n"
+    "Afternoon activities: Provide recommendation for cultural sites and local experiences \n"
+    "Evening activities: Provide recommendation for dinner spots and nightlife \n"
+    "Give the answer in a well structured markdown format."
 )
 
 def get_client():
