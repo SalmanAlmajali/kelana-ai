@@ -9,14 +9,18 @@ from services.trip_service import (
     get_recommended_places,
     trip_transportations
 )
+from services.bedrock_service import (
+    get_ai_recommendation
+)
 from database import SessionLocal, init_db
 from models.trip import Trip
 
 class TripRequest(BaseModel):
-    destination:    str
-    days:           int
-    budget:         float
-    # travel_style:   str
+    destination: str
+    days: int
+    currency: str
+    budget: float
+    travel_style: str
 
 app = FastAPI()
 
@@ -45,8 +49,10 @@ def create_trip(request: TripRequest):
     new_trip = Trip(
         destination = request.destination,
         days = request.days,
+        currency = request.currency,
         budget = request.budget,
         category = category,
+        travel_style = request.travel_style,
         daily_budget = daily_budget,
     )
 
@@ -101,7 +107,9 @@ def update_trip(trip_id: int, request: TripRequest):
 
         trip.destination = request.destination
         trip.days = request.days
+        trip.currency = request.currency
         trip.budget = request.budget
+        trip.travel_style = request.travel_style
         trip.category = category
         trip.daily_budget = daily_budget
 
@@ -134,6 +142,29 @@ def delete_trip(trip_id: int):
         "message": f"Trip {trip_id} successfully deleted",
         "data": deleted_trip
     }
+
+@app.get("/api/v1/trips/{trip_id}/generate")
+def get_ai_recommendations(trip_id: int):
+    db = SessionLocal();
+    trip = db.query(Trip).filter(Trip.id == trip_id).first()
+
+    if trip is None:
+        raise HTTPException(status_code = 404, detail = f"Trip with id {trip_id} not found")
+
+    else:
+        ai_recommendation = get_ai_recommendation(trip)
+
+        trip.ai_recommendation = ai_recommendation
+
+        db.commit()
+        db.refresh(trip)
+        db.close()
+
+        return {
+            "status": True,
+            "message": "Trip recommendation generated successfully",
+            "data": trip
+        }
 
 @app.get("/api/v1/trip-categories")
 def get_trip_categories():
