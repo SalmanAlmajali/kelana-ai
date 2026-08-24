@@ -24,6 +24,7 @@ class TripRequest(BaseModel):
     currency: str = Field(..., min_length=3, max_length=3, description="Currency code (3 letters)")
     budget: float = Field(..., gt=0, description="Total budget (must be positive)")
     travel_style: str = Field(..., min_length=1, max_length=50, description="Travel style")
+    additional_context: str = Field(..., min_length=0, max_length=100, description="Additional Context")
 
     @field_validator('currency')
     @classmethod
@@ -98,6 +99,7 @@ def create_trip(request: TripRequest):
         category = category,
         travel_style = request.travel_style,
         daily_budget = daily_budget,
+        additional_context = request.additional_context,
     )
 
     ai_recommendation = get_ai_recommendation(new_trip)
@@ -160,6 +162,11 @@ def update_trip(trip_id: int, request: TripRequest):
         trip.travel_style = request.travel_style
         trip.category = category
         trip.daily_budget = daily_budget
+        trip.additional_context = request.additional_context
+
+        ai_recommendation = get_ai_recommendation(trip)
+
+        trip.ai_recommendation = ai_recommendation
 
         db.commit()
         db.refresh(trip)

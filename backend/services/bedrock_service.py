@@ -14,6 +14,7 @@ prompt_template = (
     "Budget: {budget} {currency} (Daily: {daily_budget} {currency})\n"
     "Category: {category}\n"
     "Travel Style: {travel_style}\n\n"
+    "Additional Context: {additional_context}\n\n"
     
     "IMPORTANT: Return your response as a valid JSON object with the following structure:\n"
     "```json\n"
@@ -68,7 +69,8 @@ def get_ai_recommendation(trip: Trip):
                             budget = trip.budget,
                             daily_budget = trip.daily_budget,
                             category = trip.category,
-                            travel_style = trip.travel_style
+                            travel_style = trip.travel_style,
+                            additional_context = trip.additional_context
                         )
                     }
                 ]

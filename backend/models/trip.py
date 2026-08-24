@@ -14,6 +14,7 @@ class Trip(Base):
     category = Column(String, nullable=False)
     daily_budget = Column(Float, nullable=False)
     travel_style = Column(Text, nullable=False)
+    additional_context = Column(Text, nullable=True)
     ai_recommendation = Column(JSON, nullable=True)  # Changed to JSON to store structured data
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
