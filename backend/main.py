@@ -1,6 +1,8 @@
-from fastapi import HTTPException
+from fastapi import HTTPException, Request, status
 from fastapi import FastAPI
-from pydantic import BaseModel
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field, field_validator
 from services.trip_service import (
     calculate_daily_budget,
     get_trip_category,
@@ -14,15 +16,57 @@ from services.bedrock_service import (
 )
 from database import SessionLocal, init_db
 from models.trip import Trip
+from fastapi.middleware.cors import CORSMiddleware
 
 class TripRequest(BaseModel):
-    destination: str
-    days: int
-    currency: str
-    budget: float
-    travel_style: str
+    destination: str = Field(..., min_length=1, max_length=100, description="Trip destination")
+    days: int = Field(..., gt=0, le=365, description="Number of days (1-365)")
+    currency: str = Field(..., min_length=3, max_length=3, description="Currency code (3 letters)")
+    budget: float = Field(..., gt=0, description="Total budget (must be positive)")
+    travel_style: str = Field(..., min_length=1, max_length=50, description="Travel style")
+
+    @field_validator('currency')
+    @classmethod
+    def validate_currency(cls, v: str) -> str:
+        return v.upper()
+    
+    @field_validator('destination', 'travel_style')
+    @classmethod
+    def validate_strings(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError('Field cannot be empty or contain only whitespace')
+        return v.strip()
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Custom validation error handler for 422 responses
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = []
+    for error in exc.errors():
+        field = ".".join(str(loc) for loc in error["loc"][1:])  # Skip 'body' prefix
+        errors.append({
+            "field": field,
+            "message": error["msg"],
+            "type": error["type"]
+        })
+    
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "status": False,
+            "message": "Validation error",
+            "errors": errors
+        }
+    )
 
 init_db()
 
@@ -55,6 +99,10 @@ def create_trip(request: TripRequest):
         travel_style = request.travel_style,
         daily_budget = daily_budget,
     )
+
+    ai_recommendation = get_ai_recommendation(new_trip)
+
+    new_trip.ai_recommendation = ai_recommendation
 
     db = SessionLocal()
     db.add(new_trip)
