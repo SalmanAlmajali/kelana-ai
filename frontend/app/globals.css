@@ -98,6 +98,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -109,6 +110,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -116,9 +118,12 @@
 }
 
 @keyframes pulse-glow {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
   }
+
   50% {
     box-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
   }
@@ -165,18 +170,31 @@ html {
   0% {
     background-position: -1000px 0;
   }
+
   100% {
     background-position: 1000px 0;
   }
 }
 
 .shimmer {
-  background: linear-gradient(
-    90deg,
-    var(--surface) 0%,
-    var(--surface-secondary) 50%,
-    var(--surface) 100%
-  );
+  background: linear-gradient(90deg,
+      var(--surface) 0%,
+      var(--surface-secondary) 50%,
+      var(--surface) 100%);
   background-size: 1000px 100%;
   animation: shimmer 2s infinite;
+}
+
+@layer components {
+  .pagination {
+    @apply gap-8;
+  }
+
+  .pagination__link {
+    @apply rounded-md;
+  }
+
+  .pagination__summary {
+    @apply text-sm;
+  }
 }

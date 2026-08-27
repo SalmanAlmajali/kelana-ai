@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import TripCard from "@/components/TripCard";
 import { TripData } from "@/types/trip";
-import { Typography, TextField, Input, Select, ListBox } from "@heroui/react";
+import { Typography, TextField, Input, Select, ListBox, Pagination, Label } from "@heroui/react";
 
 interface TripsListProps {
   initialTrips: TripData[];
@@ -12,11 +12,12 @@ interface TripsListProps {
 export default function TripsList({ initialTrips }: TripsListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortMode, setSortMode] = useState<string>("latest");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const filteredAndSortedTrips = useMemo(() => {
     let trips = [...initialTrips];
 
-    // Filter by search query (destination or travel style)
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       trips = trips.filter(
@@ -26,7 +27,6 @@ export default function TripsList({ initialTrips }: TripsListProps) {
       );
     }
 
-    // Sort trips
     switch (sortMode) {
       case "latest":
         trips.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -44,6 +44,22 @@ export default function TripsList({ initialTrips }: TripsListProps) {
     return trips;
   }, [initialTrips, searchQuery, sortMode]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, sortMode]);
+
+  const totalPages = Math.ceil(filteredAndSortedTrips.length / itemsPerPage);
+  const paginatedTrips = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredAndSortedTrips.slice(start, start + itemsPerPage);
+  }, [filteredAndSortedTrips, currentPage, itemsPerPage]);
+
+  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(currentPage * itemsPerPage, filteredAndSortedTrips.length);
+
+  const linkClass = "text-muted hover:bg-accent hover:text-accent-foreground";
+  const activeClass = "bg-accent text-accent-foreground hover:bg-accent-hover";
+
   return (
     <>
       <div className="mb-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
@@ -59,6 +75,7 @@ export default function TripsList({ initialTrips }: TripsListProps) {
             value={searchQuery}
             onChange={setSearchQuery}
           >
+            <Label>Search trips</Label>
             <Input
               placeholder="Search trips..."
               className="w-full"
@@ -68,22 +85,23 @@ export default function TripsList({ initialTrips }: TripsListProps) {
           <Select
             aria-label="Sort trips"
             className="w-full sm:w-48"
-            selectedKey={sortMode}
-            onSelectionChange={(key) => key && setSortMode(key.toString())}
+            value={sortMode}
+            onChange={(key) => key && setSortMode(key.toString())}
           >
+            <Label>Sort trips</Label>
             <Select.Trigger>
               <Select.Value />
               <Select.Indicator />
             </Select.Trigger>
             <Select.Popover>
               <ListBox>
-                <ListBox.Item id="latest" textValue="Latest (newest first)">
+                <ListBox.Item id="latest" textValue="Latest">
                   Latest
                 </ListBox.Item>
-                <ListBox.Item id="oldest" textValue="Oldest (first trip first)">
+                <ListBox.Item id="oldest" textValue="Oldest">
                   Oldest
                 </ListBox.Item>
-                <ListBox.Item id="highest_budget" textValue="Highest Budget (descending)">
+                <ListBox.Item id="highest_budget" textValue="Highest Budget">
                   Highest Budget
                 </ListBox.Item>
               </ListBox>
@@ -100,11 +118,58 @@ export default function TripsList({ initialTrips }: TripsListProps) {
           </Typography>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {filteredAndSortedTrips.map((item: TripData) => (
-            <TripCard trip={item} key={item.id} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {paginatedTrips.map((item: TripData) => (
+              <TripCard trip={item} key={item.id} />
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center mt-12">
+              <Pagination className="w-full">
+                <Pagination.Summary>
+                  Showing {startItem}-{endItem} of {filteredAndSortedTrips.length} results
+                </Pagination.Summary>
+                <Pagination.Content className="gap-1 rounded-xl bg-accent/30 p-1">
+                  <Pagination.Item>
+                    <Pagination.Previous
+                      className={linkClass}
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      aria-disabled={currentPage === 1}
+                      isDisabled={currentPage === 1}
+                    >
+                      Previous
+                    </Pagination.Previous>
+                  </Pagination.Item>
+
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <Pagination.Item key={page}>
+                      <Pagination.Link
+                        className={page === currentPage ? activeClass : linkClass}
+                        isActive={currentPage === page}
+                        onClick={() => setCurrentPage(page)}
+                      >
+                        {page}
+                      </Pagination.Link>
+                    </Pagination.Item>
+                  ))}
+
+                  <Pagination.Item>
+                    <Pagination.Next
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      aria-disabled={currentPage === totalPages}
+                      className={linkClass}
+                      isDisabled={currentPage === totalPages}
+                    >
+                      Next
+                    </Pagination.Next>
+                  </Pagination.Item>
+                </Pagination.Content>
+              </Pagination>
+            </div>
+          )}
+        </>
       )}
     </>
   );

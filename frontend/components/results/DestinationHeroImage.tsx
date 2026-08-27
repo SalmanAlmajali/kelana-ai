@@ -1,6 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
-import { Chip, Typography } from '@heroui/react';
+import { Button, Chip, Typography } from '@heroui/react';
+import Link from 'next/link';
 
 interface DestinationHeroImageProps {
   destination: string;
@@ -13,6 +14,14 @@ const DestinationHeroImage: React.FC<DestinationHeroImageProps> = ({ destination
 
   return (
     <div className="relative scale-100 sm:scale-x-109 w-full max-w-4xl h-100 sm:h-125 lg:h-150 overflow-hidden rounded-2xl shadow-2xl mb-8">
+      <Link href='/trips'>
+        <Button variant="secondary" size="sm" className="absolute top-4 left-4 z-10">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+            <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 9-3 3m0 0 3 3m-3-3h7.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+          </svg>
+          Back
+        </Button>
+      </Link>
       {/* Image */}
       <div className="absolute inset-0">
         <Image
