@@ -1,53 +1,21 @@
-"use client";
+import HeroTitle from "@/components/hero/HeroTitle";
+import TripPlannerForm from "@/components/hero/TripPlannerForm";
+import TrustBadges from "@/components/hero/TrustBadges";
 
-import ErrorAlert from "@/components/ErrorAlert";
-import HeroSection from "@/components/HeroSection";
-import LoadingState from "@/components/LoadingState";
-import TripResults from "@/components/TripResults";
-import { useTrip } from "@/hooks/useTrip";
-
-export default function Home() {
-  const {
-    isLoading,
-    tripResult,
-    error,
-    formValues,
-    showForm,
-    handleSubmit,
-    handleRetry,
-    handleDismissError,
-    handleNewTrip,
-  } = useTrip();
+export default async function Home() {
 
   return (
-    <main className="min-h-screen">
-      {/* Error Alert */}
-      {error && (
-        <ErrorAlert 
-          message={error}
-          onRetry={handleRetry}
-          onDismiss={handleDismissError}
-        />
-      )}
+    <main className="hero-section relative flex flex-col">
+      {/* Hero Content */}
+      <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 pb-20">
+        <div className="w-full max-w-4xl mx-auto text-center space-y-8">
+          <HeroTitle />
 
-      {/* Hero Onboarding Section */}
-      {showForm && !tripResult && !isLoading && (
-        <HeroSection onSubmit={handleSubmit} isLoading={isLoading} />
-      )}
+          <TripPlannerForm />
 
-      {/* Loading State */}
-      {isLoading && (
-        <LoadingState formValues={formValues} />
-      )}
-
-      {/* Results Section */}
-      {tripResult && !isLoading && (
-        <TripResults 
-          tripResult={tripResult}
-          formValues={formValues}
-          onNewTrip={handleNewTrip}
-        />
-      )}
+          <TrustBadges />
+        </div>
+      </div>
     </main>
   );
 }

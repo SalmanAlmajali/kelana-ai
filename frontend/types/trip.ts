@@ -16,7 +16,6 @@ export interface AIRecommendation {
 export interface TripData {
   id: number;
   destination: string;
-  destination_image?: string | null;
   budget: number;
   currency: string;
   days: number;
@@ -32,7 +31,7 @@ export interface TripData {
 export interface TripResponse {
   status: boolean;
   message: string;
-  data: TripData;
+  data: TripData | TripData[];
 }
 
 export interface TripFormData {

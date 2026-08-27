@@ -8,6 +8,8 @@ const dmSans = DM_Sans({
 });
 
 import Footer from "@/components/Footer";
+import BackgroundOverlay from "@/components/BackgroundOverlay";
+import NavigationHeader from "@/components/NavigationHeader";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -21,12 +23,21 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
       className={`${dmSans.variable}`}
     >
-      <body className="min-h-screen flex flex-col text-foreground antialiased">
-        <div className="flex-1 flex flex-col">
-          {children}
-        </div>
+
+
+
+      <body className="min-h-screen text-foreground antialiased">
+        {/* Navigation Header */}
+        <NavigationHeader />
+
+        {/* Background Overlay */}
+        <BackgroundOverlay />
+
+        {children}
+        
         <Footer />
       </body>
+
     </html>
   );
 }

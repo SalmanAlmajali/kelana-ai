@@ -4,15 +4,16 @@ import Image from 'next/image';
 
 const BackgroundOverlay: React.FC = () => {
   return (
-    <div className="absolute inset-0 z-0 overflow-hidden">
+    <div className="fixed inset-0 z-0 overflow-hidden">
       <Image
         src="/hero-bg.jpg"
         alt="Travel Destination Background"
         fill
-        className="object-cover opacity-60"
+        className="hidden sm:block object-cover"
         priority
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/60 to-background" />
+      <div className="absolute inset-0 bg-linear-to-b from-background/30 via-background/60 to-background" />
     </div>
   );
 };

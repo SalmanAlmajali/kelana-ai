@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { JSX } from 'react'
 
 const MarkdownContent = ({ content }: { content: string }) => {
     // Handle empty or null content

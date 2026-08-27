@@ -1,27 +1,24 @@
 import { useState } from "react";
-import { TripData, TripFormData } from "@/types/trip";
+import { TripData, TripFormData, TripResponse } from "@/types/trip";
 import { TripService } from "@/services/tripService";
 
 export function useTrip() {
   const [isLoading, setIsLoading] = useState(false);
-  const [tripResult, setTripResult] = useState<TripData | null>(null);
+  const [tripResult, setTripResult] = useState<TripResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [formValues, setFormValues] = useState<TripFormData | null>(null);
-  const [showForm, setShowForm] = useState(true);
 
   const submitTrip = async (data: TripFormData) => {
     setIsLoading(true);
     setError(null);
-    setShowForm(false);
 
     try {
       const result = await TripService.createTrip(data);
-      setTripResult(result.data);
+      setTripResult(result);
     } catch (error) {
       console.error("Error:", error);
       const errorMessage = TripService.handleError(error);
       setError(errorMessage);
-      setShowForm(true);
     } finally {
       setIsLoading(false);
     }
@@ -52,23 +49,19 @@ export function useTrip() {
 
   const handleDismissError = () => {
     setError(null);
-    setShowForm(true);
   };
 
   const handleNewTrip = () => {
-    setTripResult(null);
     setError(null);
     setFormValues(null);
-    setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return {
     isLoading,
-    tripResult,
     error,
+    tripResult,
     formValues,
-    showForm,
     handleSubmit,
     handleRetry,
     handleDismissError,

@@ -1,13 +1,63 @@
-import React from 'react';
+"use client";
+
 import { Form, TextField, Input, NumberField, Select, Label, ListBox, Button, TextArea } from "@heroui/react";
 import { TRAVEL_STYLES, CURRENCIES, POPULAR_DESTINATIONS } from "@/constants/travel";
+import { useTrip } from '@/hooks/useTrip';
+import LoadingState from "../LoadingState";
+import ErrorAlert from "../hero/ErrorAlert";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-interface TripPlannerFormProps {
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+const TripPlannerForm = () => {
+
+  const router = useRouter();
+
+  const {
+    handleSubmit,
+    isLoading,
+    formValues,
+    error,
+    handleRetry,
+    handleDismissError,
+    tripResult,
+  } = useTrip();
+
+  useEffect(() => {
+    if (tripResult?.status) {
+      router.push('/trips');
+    }
+  }, [tripResult])
+
+  return (
+    <div>
+      {error && (
+        <ErrorAlert
+          message={error}
+          onRetry={handleRetry}
+          onDismiss={handleDismissError}
+        />
+      )}
+
+      {!isLoading && (
+        <FormComponent
+          handleSubmit={handleSubmit}
+          isLoading={isLoading}
+        />
+      )}
+
+      {isLoading && (
+        <LoadingState formValues={formValues} />
+      )}
+    </div>
+  );
+};
+
+interface FormComponentProps {
+  handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   isLoading: boolean;
 }
 
-const TripPlannerForm: React.FC<TripPlannerFormProps> = ({ onSubmit, isLoading }) => {
+const FormComponent: React.FC<FormComponentProps> = ({ handleSubmit, isLoading }) => {
   const setDestination = (destination: string) => {
     const input = document.querySelector('input[name="destination"]') as HTMLInputElement;
     if (input) input.value = destination;
@@ -16,8 +66,8 @@ const TripPlannerForm: React.FC<TripPlannerFormProps> = ({ onSubmit, isLoading }
   return (
     <div className="animate-slide-up" style={{ animationDelay: '200ms' }}>
       <Form
-        className="mx-auto max-w-3xl rounded-3xl bg-surface backdrop-blur-xl border border-border shadow-2xl p-6 sm:p-8"
-        onSubmit={onSubmit}
+        className="mx-auto rounded-3xl bg-surface backdrop-blur-xl border border-border shadow-2xl p-6 sm:p-8"
+        onSubmit={handleSubmit}
       >
         <div className="space-y-5">
           {/* Destination Input */}
@@ -35,7 +85,7 @@ const TripPlannerForm: React.FC<TripPlannerFormProps> = ({ onSubmit, isLoading }
               <button
                 key={dest.name}
                 type="button"
-                className="px-4 py-2 rounded-full bg-surface-secondary hover:bg-surface-tertiary border border-border text-foreground text-sm transition-all"
+                className="px-4 py-2 rounded-full bg-surface-secondary hover:bg-surface-tertiary border border-border text-foreground text-sm transition-all cursor-pointer"
                 onClick={() => setDestination(dest.name)}
               >
                 {dest.emoji} {dest.name.split(',')[0]}
@@ -102,7 +152,7 @@ const TripPlannerForm: React.FC<TripPlannerFormProps> = ({ onSubmit, isLoading }
               <Label className="text-xs font-medium text-foreground mb-1.5">Days</Label>
               <NumberField.Group>
                 <NumberField.DecrementButton />
-                <NumberField.Input className="text-center" />
+                <NumberField.Input className="text-center" inputMode="decimal" />
                 <NumberField.IncrementButton />
               </NumberField.Group>
             </NumberField>
@@ -149,7 +199,7 @@ const TripPlannerForm: React.FC<TripPlannerFormProps> = ({ onSubmit, isLoading }
             size="lg"
             type="submit"
           >
-            <svg className="size-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <svg className="size-0 sm:size-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             Generate My Itinerary
@@ -157,7 +207,7 @@ const TripPlannerForm: React.FC<TripPlannerFormProps> = ({ onSubmit, isLoading }
         </div>
       </Form>
     </div>
-  );
-};
+  )
+}
 
 export default TripPlannerForm;
