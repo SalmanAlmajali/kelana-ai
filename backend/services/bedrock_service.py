@@ -43,71 +43,75 @@ prompt_template = (
     "- Return ONLY the JSON object, no additional text"
 )
 
-def get_client():
-    client = boto3.client(
-        service_name="bedrock-runtime",
-        region_name=os.getenv("AWS_REGION")
-    )
+class BedrockService:
 
-    return client
+    @staticmethod
+    def get_client():
+        client = boto3.client(
+            service_name="bedrock-runtime",
+            region_name=os.getenv("AWS_REGION")
+        )
 
-def get_ai_recommendation(trip: Trip):
+        return client
 
-    client = get_client()
+    @classmethod
+    def get_ai_recommendation(cls, trip: Trip):
 
-    response = client.converse(
-        modelId = os.getenv("MODEL_ID"),
-        messages = [
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "text": prompt_template.format(
-                            days = trip.days,
-                            destination = trip.destination,
-                            currency = trip.currency,
-                            budget = trip.budget,
-                            daily_budget = trip.daily_budget,
-                            category = trip.category,
-                            travel_style = trip.travel_style,
-                            additional_context = trip.additional_context
-                        )
-                    }
-                ]
+        client = cls.get_client()
+
+        response = client.converse(
+            modelId = os.getenv("MODEL_ID"),
+            messages = [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "text": prompt_template.format(
+                                days = trip.days,
+                                destination = trip.destination,
+                                currency = trip.currency,
+                                budget = trip.budget,
+                                daily_budget = trip.daily_budget,
+                                category = trip.category,
+                                travel_style = trip.travel_style,
+                                additional_context = trip.additional_context
+                            )
+                        }
+                    ]
+                }
+            ]
+        )
+
+        ai_response = response["output"]["message"]["content"][0]["text"]
+
+        # Try to parse JSON response
+        try:
+            # Remove markdown code blocks if present
+            cleaned_response = ai_response.strip()
+            if cleaned_response.startswith("```json"):
+                cleaned_response = cleaned_response[7:]
+            if cleaned_response.startswith("```"):
+                cleaned_response = cleaned_response[3:]
+            if cleaned_response.endswith("```"):
+                cleaned_response = cleaned_response[:-3]
+            
+            cleaned_response = cleaned_response.strip()
+            
+            # Parse JSON
+            structured_data = json.loads(cleaned_response)
+            
+            # Validate structure
+            if not all(key in structured_data for key in ["daily_itinerary", "travel_tips", "food_recommendations", "budget_breakdown"]):
+                raise ValueError("Missing required fields in AI response")
+            
+            return structured_data
+            
+        except (json.JSONDecodeError, ValueError) as e:
+            # Fallback: return unstructured response in a basic structure
+            print(f"Failed to parse AI response as JSON: {e}")
+            return {
+                "daily_itinerary": [],
+                "travel_tips": ai_response,
+                "food_recommendations": "See travel tips section",
+                "budget_breakdown": f"Daily budget: {trip.daily_budget} {trip.currency}"
             }
-        ]
-    )
-
-    ai_response = response["output"]["message"]["content"][0]["text"]
-
-    # Try to parse JSON response
-    try:
-        # Remove markdown code blocks if present
-        cleaned_response = ai_response.strip()
-        if cleaned_response.startswith("```json"):
-            cleaned_response = cleaned_response[7:]
-        if cleaned_response.startswith("```"):
-            cleaned_response = cleaned_response[3:]
-        if cleaned_response.endswith("```"):
-            cleaned_response = cleaned_response[:-3]
-        
-        cleaned_response = cleaned_response.strip()
-        
-        # Parse JSON
-        structured_data = json.loads(cleaned_response)
-        
-        # Validate structure
-        if not all(key in structured_data for key in ["daily_itinerary", "travel_tips", "food_recommendations", "budget_breakdown"]):
-            raise ValueError("Missing required fields in AI response")
-        
-        return structured_data
-        
-    except (json.JSONDecodeError, ValueError) as e:
-        # Fallback: return unstructured response in a basic structure
-        print(f"Failed to parse AI response as JSON: {e}")
-        return {
-            "daily_itinerary": [],
-            "travel_tips": ai_response,
-            "food_recommendations": "See travel tips section",
-            "budget_breakdown": f"Daily budget: {trip.daily_budget} {trip.currency}"
-        }

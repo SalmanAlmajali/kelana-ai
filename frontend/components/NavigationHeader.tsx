@@ -1,13 +1,19 @@
 import { Button } from '@heroui/react';
 import Link from 'next/link';
 import React from 'react';
+import LogoutButton from './LogoutButton';
+
+import WelcomeMessage from './WelcomeMessage';
 
 const NavigationHeader: React.FC = () => {
-
   const links = [
     {
       href: '/trips',
       label: 'Your Trips'
+    },
+    {
+      href: '/profile',
+      label: 'Profile'
     }
   ]
 
@@ -33,7 +39,7 @@ const NavigationHeader: React.FC = () => {
           <span className="text-xl font-bold text-foreground">KelanaAI</span>
           <div className='ml-12 hidden sm:block'>
             {links.map((link) => (
-              <nav key={link.href}>
+              <nav key={link.href} className="inline-block mr-6 last:mr-0">
                 <a
                   href={link.href}
                   className="text-foreground/80 hover:text-foreground transition-colors"
@@ -44,14 +50,18 @@ const NavigationHeader: React.FC = () => {
             ))}
           </div>
         </div>
-        <Link href={'/'} className='hidden sm:block'>
-          <Button variant="secondary" size="sm">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-            </svg>
-            New Trip
-          </Button>
-        </Link>
+        <div className="flex items-center gap-x-2">
+          <WelcomeMessage />
+          <Link href={'/'} className='hidden sm:block'>
+            <Button variant="secondary" size="sm">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+              </svg>
+              New Trip
+            </Button>
+          </Link>
+          <LogoutButton />
+        </div>
       </div>
     </header>
   );

@@ -3,11 +3,14 @@ import { TripFormData, TripResponse } from "@/types/trip";
 const apiUri = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export class TripService {
-  static async getTrips(): Promise<TripResponse> {
+  static async getTrips(serverToken?: string): Promise<TripResponse> {
+    const token = serverToken || (typeof window !== 'undefined' ? localStorage.getItem("token") : null);
+
     const response = await fetch(`${apiUri}/api/v1/trips`, {
       method: "GET",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        ...(token ? { "Authorization": `Bearer ${token}` } : {})
       },
     });
 
@@ -19,11 +22,14 @@ export class TripService {
     return response.json();
   }
 
-  static async getTrip(id: number): Promise<TripResponse> {
+  static async getTrip(id: number, serverToken?: string): Promise<TripResponse> {
+    const token = serverToken || (typeof window !== 'undefined' ? localStorage.getItem("token") : null);
+
     const response = await fetch(`${apiUri}/api/v1/trips/${id}`, {
       method: "GET",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        ...(token ? { "Authorization": `Bearer ${token}` } : {})
       },
     });
 
@@ -35,11 +41,14 @@ export class TripService {
     return response.json();
   }
 
-  static async createTrip(data: TripFormData): Promise<TripResponse> {
+  static async createTrip(data: TripFormData, serverToken?: string): Promise<TripResponse> {
+    const token = serverToken || (typeof window !== 'undefined' ? localStorage.getItem("token") : null);
+
     const response = await fetch(`${apiUri}/api/v1/trips`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        ...(token ? { "Authorization": `Bearer ${token}` } : {})
       },
       body: JSON.stringify({
         destination: data.destination,

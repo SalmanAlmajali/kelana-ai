@@ -13,6 +13,17 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False)
 
 Base = declarative_base();
 
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 def init_db() -> None:
     """Create all SQLAlchemy tables for configured database."""
+    
+    import models.user
+    import models.trip
+
     Base.metadata.create_all(bind=engine)

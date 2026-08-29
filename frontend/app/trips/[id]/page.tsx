@@ -3,15 +3,18 @@ import DestinationHeroImage from "@/components/results/DestinationHeroImage";
 import { TripSummary } from "@/components/TripSummary";
 import { TripService } from "@/services/tripService";
 import { TripData } from "@/types/trip";
-import { Button } from "@heroui/react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+
+import { cookies } from "next/headers";
 
 const Trip = async (props: { params: Promise<{ id: number }> }) => {
   const params = await props.params;
   const id = params.id;
 
-  const { data } = await TripService.getTrip(id)
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+
+  const { data } = await TripService.getTrip(id, token)
   const trip = (Array.isArray(data) ? data[0] : data) as TripData;
 
   if (!trip) {

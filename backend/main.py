@@ -1,42 +1,20 @@
+from typing import Annotated
+from services.trip_service import TripService
+from database.database import get_db
+from fastapi import Depends
+from services.auth_service import UserService
+from models.request.auth_request import (AuthRequest, RegisterRequest)
+from models.request.trip_request import TripRequest
 from fastapi import HTTPException, Request, status
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, field_validator
-from services.trip_service import (
-    calculate_daily_budget,
-    get_trip_category,
-    transport_recommendation,
-    trip_categories,
-    get_recommended_places,
-    trip_transportations
-)
-from services.bedrock_service import (
-    get_ai_recommendation
-)
-from database import SessionLocal, init_db
+from database.database import SessionLocal, init_db
 from models.trip import Trip
 from fastapi.middleware.cors import CORSMiddleware
-
-class TripRequest(BaseModel):
-    destination: str = Field(..., min_length=1, max_length=100, description="Trip destination")
-    days: int = Field(..., gt=0, le=365, description="Number of days (1-365)")
-    currency: str = Field(..., min_length=3, max_length=3, description="Currency code (3 letters)")
-    budget: float = Field(..., gt=0, description="Total budget (must be positive)")
-    travel_style: str = Field(..., min_length=1, max_length=50, description="Travel style")
-    additional_context: str = Field(..., min_length=0, max_length=100, description="Additional Context")
-
-    @field_validator('currency')
-    @classmethod
-    def validate_currency(cls, v: str) -> str:
-        return v.upper()
-    
-    @field_validator('destination', 'travel_style')
-    @classmethod
-    def validate_strings(cls, v: str) -> str:
-        if not v.strip():
-            raise ValueError('Field cannot be empty or contain only whitespace')
-        return v.strip()
+from sqlalchemy.orm import Session
+from models.user import User
+from models.trip import Trip
 
 app = FastAPI()
 
@@ -84,151 +62,123 @@ def health():
         "status": "ok"
     }
 
-@app.post("/api/v1/trips")
-def create_trip(request: TripRequest):
-    daily_budget = calculate_daily_budget(request.budget, request.days)
-    category = get_trip_category(request.budget)
-    # recommendation_transport = transport_recommendation(request.travel_style)
-    # recommended_places = get_recommended_places(request.destination)
+@app.post("/api/v1/auth/register", status_code=status.HTTP_201_CREATED)
+def register(request: RegisterRequest, db: Session = Depends(get_db)):
+    try:
+        new_user =  UserService.register(request, db)
 
-    new_trip = Trip(
-        destination = request.destination,
-        days = request.days,
-        currency = request.currency,
-        budget = request.budget,
-        category = category,
-        travel_style = request.travel_style,
-        daily_budget = daily_budget,
-        additional_context = request.additional_context,
-    )
+        return {
+            "status": True,
+            "message": "You've successfully registered",
+            "data": new_user
+        }
+        
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
-    ai_recommendation = get_ai_recommendation(new_trip)
+@app.post("/api/v1/auth/login", status_code=status.HTTP_200_OK)
+def login(request: AuthRequest, db: Session = Depends(get_db)):
+    try:
+        user = UserService.get_user(request.email, db)
 
-    new_trip.ai_recommendation = ai_recommendation
+        if user is None or not UserService.verify_password(request.password, user.password_hash):
+            raise ValueError("Invalid email or password")
 
-    db = SessionLocal()
-    db.add(new_trip)
-    db.commit()
-    db.refresh(new_trip)
-    db.close()
+        token = UserService.create_access_token(user)
 
+        return {
+            "status": True,
+            "message": "Auth successfully done",
+            "data": {
+                "access_token": token
+            }
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+@app.get("/api/v1/auth/me")
+def get_current_user(
+    user: Annotated[User, Depends(UserService.get_current_user)],
+):
     return {
         "status": True,
-        "message": "New trip added successfully",
-        "data": new_trip
+        "message": "Hello World!",
+        "data": user
     }
 
-@app.get("/api/v1/trips")
-def list_trips():
-    db = SessionLocal();
-    trips = db.query(Trip).all()
-    db.close()
-    
-    return {
-        "status": True,
-        "data": trips
-    }
+@app.post("/api/v1/trips", status_code=status.HTTP_201_CREATED)
+def create_trip(request: TripRequest, user: Annotated[User, Depends(UserService.get_current_user)], db: Session = Depends(get_db)):
+    try:
+        new_trip = TripService.store(request, user.id, db)
 
-@app.get("/api/v1/trips/{trip_id}")
-def get_trip(trip_id: int):
-    db = SessionLocal()
-    trip = db.query(Trip).filter(Trip.id == trip_id).first()
-    db.close()
+        return {
+            "status": True,
+            "message": "New trip added successfully",
+            "data": new_trip
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
-    if trip is None:
-        raise HTTPException(status_code = 404, detail = f"Trip with id {trip_id} not found")
+@app.get("/api/v1/trips", status_code=status.HTTP_200_OK)
+def get_trips(user: Annotated[User, Depends(UserService.get_current_user)], db: Session = Depends(get_db)):
+    try:
+        trips = TripService.get_trips(user.id, db)
+        
+        return {
+            "status": True,
+            "message": "Trips retrieved successfully",
+            "data": trips
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
-    return {
-        "status": True,
-        "data": trip
-    }
+@app.get("/api/v1/trips/{trip_id}", status_code=status.HTTP_200_OK)
+def get_trip(trip_id: int, user: Annotated[User, Depends(UserService.get_current_user)], db: Session = Depends(get_db)):
+    try:
+        trip = TripService.get_trip(trip_id, user.id, db)
+        
+        return {
+            "status": True,
+            "message": "Trip retrieved successfully",
+            "data": trip
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
-@app.put("/api/v1/trips/{trip_id}")
-def update_trip(trip_id: int, request: TripRequest):
-    db = SessionLocal();
-    trip = db.query(Trip).filter(Trip.id == trip_id).first()
-
-    if trip is None:
-        raise HTTPException(status_code = 404, detail = f"Trip with id {trip_id} not found")
-
-    else:
-        daily_budget = calculate_daily_budget(request.budget, request.days)
-        category = get_trip_category(request.budget)
-
-        trip.destination = request.destination
-        trip.days = request.days
-        trip.currency = request.currency
-        trip.budget = request.budget
-        trip.travel_style = request.travel_style
-        trip.category = category
-        trip.daily_budget = daily_budget
-        trip.additional_context = request.additional_context
-
-        ai_recommendation = get_ai_recommendation(trip)
-
-        trip.ai_recommendation = ai_recommendation
-
-        db.commit()
-        db.refresh(trip)
-        db.close()
-
+@app.put("/api/v1/trips/{trip_id}", status_code=status.HTTP_200_OK)
+def update_trip(trip_id: int, request: TripRequest, user: Annotated[User, Depends(UserService.get_current_user)], db: Session = Depends(get_db)):
+    try:
+        trip = TripService.update_trip(trip_id, request, user.id, db)
+        
         return {
             "status": True,
             "message": "Trip updated successfully",
             "data": trip
         }
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
-@app.delete("/api/v1/trips/{trip_id}")
-def delete_trip(trip_id: int):
-    db = SessionLocal()
-    trip = db.query(Trip).filter(Trip.id == trip_id).first()
-
-    if trip is None:
-        raise HTTPException(status_code = 404, detail = f"Trip with id {trip_id} not found")
-
-    deleted_trip = trip
-
-    db.delete(trip)
-    db.commit()
-    db.close()
-
-    return {
-        "status": True,
-        "message": f"Trip {trip_id} successfully deleted",
-        "data": deleted_trip
-    }
-
-@app.get("/api/v1/trips/{trip_id}/generate")
-def get_ai_recommendations(trip_id: int):
-    db = SessionLocal();
-    trip = db.query(Trip).filter(Trip.id == trip_id).first()
-
-    if trip is None:
-        raise HTTPException(status_code = 404, detail = f"Trip with id {trip_id} not found")
-
-    else:
-        ai_recommendation = get_ai_recommendation(trip)
-
-        trip.ai_recommendation = ai_recommendation
-
-        db.commit()
-        db.refresh(trip)
-        db.close()
-
+@app.delete("/api/v1/trips/{trip_id}", status_code=status.HTTP_200_OK)
+def delete_trip(trip_id: int, user: Annotated[User, Depends(UserService.get_current_user)], db: Session = Depends(get_db)):
+    try:
+        trip = TripService.delete_trip(trip_id, user.id, db)
+        
         return {
             "status": True,
-            "message": "Trip recommendation generated successfully",
+            "message": "Trip deleted successfully",
             "data": trip
         }
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 @app.get("/api/v1/trip-categories")
 def get_trip_categories():
-    return trip_categories()
+    return TripService.trip_categories()
 
 @app.get("/api/v1/recommendations")
 def get_recommendations():
-    return get_recommended_places()
+    return TripService.get_recommended_places()
 
 @app.get("/api/v1/transportations")
 def get_transportations():
-    return trip_transportations();
+    return TripService.trip_transportations()

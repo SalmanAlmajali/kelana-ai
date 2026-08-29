@@ -5,9 +5,13 @@ import { Button, Typography } from "@heroui/react";
 import Image from "next/image";
 import Link from "next/link";
 
-const Trips = async () => {
+import { cookies } from "next/headers";
 
-    const { data } = await TripService.getTrips();
+const Trips = async () => {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("token")?.value;
+
+    const { data } = await TripService.getTrips(token);
     const trips = (Array.isArray(data) ? data : (data ? [data] : [])) as TripData[];
 
     return (
