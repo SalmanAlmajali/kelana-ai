@@ -145,29 +145,31 @@ class TripService:
     @classmethod
     def get_trip(cls, trip_id: int, user_id: int, db: Session) -> Trip:
         try:
-            trip = db.query(Trip).filter(
-                Trip.id == trip_id and User.id == user_id
-            ).first()
+            trip = db.query(Trip).filter(Trip.id == trip_id).first()
         except SQLAlchemyError as e:
             raise ValueError(f"Error occured: {e}")
             
         if trip is None:
-            raise ValueError("Trip not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Trip not found")
+        
+        if trip.user_id != user_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this trip")
         
         return trip
 
     @classmethod
     def update_trip(cls, trip_id: int, request: object, user_id: int, db: Session) -> Trip:
         try:
-            trip = db.query(Trip).filter(
-                Trip.id == trip_id and User.id == user_id
-            ).first()
+            trip = db.query(Trip).filter(Trip.id == trip_id).first()
             
         except SQLAlchemyError as e:
             raise ValueError(f"Error occured: {e}")
 
         if trip is None:
-            raise ValueError("Trip not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Trip not found")
+
+        if trip.user_id != user_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this trip")
 
         trip.destination = request.destination
         trip.days = request.days
@@ -201,15 +203,16 @@ class TripService:
     @classmethod
     def delete_trip(cls, trip_id: int, user_id: int, db: Session) -> Trip:
         try:
-            trip = db.query(Trip).filter(
-                Trip.id == trip_id and User.id == user_id
-            ).first()
+            trip = db.query(Trip).filter(Trip.id == trip_id).first()
             
         except SQLAlchemyError as e:
             raise ValueError(f"Error occured: {e}")
 
         if trip is None:
-            raise ValueError("Trip not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Trip not found")
+
+        if trip.user_id != user_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this trip")
 
         try:
             db.delete(trip)
