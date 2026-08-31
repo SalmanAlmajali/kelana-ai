@@ -3,9 +3,6 @@
 
 /*
  * HeroUI Theme Customization
- * Add this to your global.css after importing @heroui/styles
- * Only includes variables users need to customize
- * @see https://heroui.com/docs/react/getting-started/theming
  */
 
 :root,
@@ -118,7 +115,6 @@
 }
 
 @keyframes pulse-glow {
-
   0%,
   100% {
     box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
@@ -163,6 +159,15 @@ html {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--muted);
+}
+
+/* Hide scrollbar for carousel but allow scrolling */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 /* Loading shimmer effect */

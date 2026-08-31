@@ -22,24 +22,22 @@ const Trip = async (props: { params: Promise<{ id: number }> }) => {
   }
 
   return (
-    <main className="relative">
-      <div className="relative z-10 flex flex-1 flex-col items-center justify-center pb-20 mt-12 p-0 sm:p-4">
-        <div className="w-full max-w-2xl sm:max-w-4xl p-4 sm:p-8 bg-none rounded-none sm:rounded-2xl">
+    <main className="relative w-full animate-fade-in">
+      <div className="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
+        <div className="w-full max-w-full">
           <div className="mb-12">
 
             <DestinationHeroImage
               destination={trip.destination}
             />
 
-            <div className="p-0 sm:p-4">
-              <div className="flex flex-col sm:flex-row items-start gap-2 sm:gap-3">
-                <div className="flex-1 w-full min-w-0 space-y-4">
-                  <TripSummary trip={trip} />
+            <div className="flex flex-col sm:flex-row items-start gap-2 sm:gap-3">
+              <div className="flex-1 w-full min-w-0 space-y-4">
+                <TripSummary trip={trip} />
 
-                  {trip.ai_recommendation && (
-                    <AIRecommendation aiRecommendation={trip.ai_recommendation} />
-                  )}
-                </div>
+                {trip.ai_recommendation && (
+                  <AIRecommendation aiRecommendation={trip.ai_recommendation} />
+                )}
               </div>
             </div>
           </div>

@@ -5,7 +5,6 @@ from botocore.exceptions import ClientError
 from services.bedrock_service import BedrockService
 from sqlalchemy.orm import Session
 from models.trip import Trip
-from models.user import User
 
 class TripService:
     

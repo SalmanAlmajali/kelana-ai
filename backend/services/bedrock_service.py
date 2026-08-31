@@ -46,9 +46,9 @@ prompt_template = (
 class BedrockService:
 
     @staticmethod
-    def get_client():
+    def get_client(service_name: str = "bedrock-runtime"):
         client = boto3.client(
-            service_name="bedrock-runtime",
+            service_name=service_name,
             region_name=os.getenv("AWS_REGION")
         )
 

@@ -13,7 +13,7 @@ const DestinationHeroImage: React.FC<DestinationHeroImageProps> = ({ destination
   const displayImage = "/hero-bg.jpg";
 
   return (
-    <div className="relative scale-100 sm:scale-x-109 w-full max-w-4xl h-100 sm:h-125 lg:h-150 overflow-hidden rounded-2xl shadow-2xl mb-8">
+    <div className="relative w-full max-w-4xl h-100 sm:h-125 lg:h-150 overflow-hidden rounded-2xl shadow-2xl mb-8">
       <Link href='/trips'>
         <Button variant="secondary" size="sm" className="absolute top-4 left-4 z-10">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">

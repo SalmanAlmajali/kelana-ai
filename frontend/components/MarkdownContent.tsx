@@ -112,7 +112,7 @@ const MarkdownContent = ({ content }: { content: string }) => {
                 }
                 
                 elements.push(
-                    <ol key={i} className="list-decimal list-inside space-y-1 my-3 ml-4">
+                    <ol key={i} className="list-decimal list-inside space-y-1 my-2 sm:my-3 ml-1 sm:ml-4">
                         {listItems.map((item, idx) => (
                             <li key={idx} className="text-sm text-muted">{parseBold(item)}</li>
                         ))}
@@ -135,7 +135,7 @@ const MarkdownContent = ({ content }: { content: string }) => {
                 }
                 
                 elements.push(
-                    <ul key={i} className="list-disc list-inside space-y-1 my-3 ml-4">
+                    <ul key={i} className="list-disc list-inside space-y-1 my-2 sm:my-3 ml-1 sm:ml-4">
                         {listItems.map((item, idx) => (
                             <li key={idx} className="text-sm text-muted">{parseBold(item)}</li>
                         ))}

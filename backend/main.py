@@ -1,3 +1,6 @@
+from botocore.exceptions import ClientError
+from services.kb_service import KnowledgeBaseService
+from models.request.question_request import QuestionRequest
 from typing import Annotated
 from services.trip_service import TripService
 from database.database import get_db
@@ -170,6 +173,30 @@ def delete_trip(trip_id: int, user: Annotated[User, Depends(UserService.get_curr
         }
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+@app.post("/api/v1/ask", status_code=status.HTTP_200_OK)
+def assist(requset: QuestionRequest, user: Annotated[User, Depends(UserService.get_current_user)]):
+    try:
+        result = KnowledgeBaseService().ask_knowledge_base(requset.query)
+        return {
+            "status": True,
+            "message": "Knowledge base query retrieved successfully",
+            "data": {
+                "query": requset.query,
+                "response": result
+            }
+        }
+    except ClientError as exc:
+            error = exc.response.get("Error", {})
+            error_code = error.get("Code", "BedrockError")
+            error_message = error.get("Message", "No error message returned")
+
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Bedrock request failed: {error_code} - {error_message}",
+            ) from exc
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error while querying knowledge base: {e}")
 
 @app.get("/api/v1/trip-categories")
 def get_trip_categories():

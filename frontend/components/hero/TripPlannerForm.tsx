@@ -66,7 +66,7 @@ const FormComponent: React.FC<FormComponentProps> = ({ handleSubmit, isLoading }
   return (
     <div className="animate-slide-up" style={{ animationDelay: '200ms' }}>
       <Form
-        className="mx-auto rounded-3xl bg-surface backdrop-blur-xl border border-border shadow-2xl p-6 sm:p-8"
+        className="w-full mx-auto"
         onSubmit={handleSubmit}
       >
         <div className="space-y-5">
@@ -94,7 +94,7 @@ const FormComponent: React.FC<FormComponentProps> = ({ handleSubmit, isLoading }
           </div>
 
           {/* Compact Grid for Other Inputs */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pt-2 sm:pt-4">
             {/* Budget */}
             <NumberField
               isRequired

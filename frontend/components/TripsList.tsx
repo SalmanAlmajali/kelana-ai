@@ -62,16 +62,16 @@ export default function TripsList({ initialTrips }: TripsListProps) {
 
   return (
     <>
-      <div className="mb-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+      <div className="mb-12 flex flex-col lg:flex-row lg:items-center sm:items-start justify-between gap-6 w-full">
         <div>
           <Typography type="h1">Your Trips</Typography>
           <Typography color="muted" type="body-sm">{filteredAndSortedTrips.length} Saved trip plans</Typography>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
           <TextField
             aria-label="Search trips"
-            className="w-full sm:w-64"
+            className="w-full lg:w-72"
             value={searchQuery}
             onChange={setSearchQuery}
           >
@@ -84,7 +84,7 @@ export default function TripsList({ initialTrips }: TripsListProps) {
 
           <Select
             aria-label="Sort trips"
-            className="w-full sm:w-48"
+            className="w-full lg:w-40"
             value={sortMode}
             onChange={(key) => key && setSortMode(key.toString())}
           >
@@ -119,7 +119,7 @@ export default function TripsList({ initialTrips }: TripsListProps) {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {paginatedTrips.map((item: TripData) => (
               <TripCard trip={item} key={item.id} />
             ))}

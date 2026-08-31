@@ -12,7 +12,7 @@ const DailyItenerary = ({ day }: { day: DailyItinerary }) => {
                     {day.title || `Day ${day.day}`}
                 </h5>
             </div>
-            <div className="space-y-3 sm:ml-13 pl-4 sm:pl-0 border-l-2 sm:border-l-0 border-accent/20 ml-5 sm:ml-0">
+            <div className="space-y-4 pl-3 sm:pl-0 border-l-2 sm:border-l-0 border-accent/20 ml-1 sm:ml-0 mt-2">
                 <Itinerary
                     icon='🌤️'
                     label='Morning'
@@ -35,11 +35,11 @@ const DailyItenerary = ({ day }: { day: DailyItinerary }) => {
 
 const Itinerary = ({ icon, label, value }: { icon: string, label: string, value: string }) => (
     <div>
-        <div className="flex items-center gap-2 mb-1.5">
+        <div className="flex items-center gap-2 mb-2">
             <span>{icon}</span>
             <span className="text-sm font-medium text-foreground">{label}</span>
         </div>
-        <div className="pl-7 text-sm">
+        <div className="pl-2 sm:pl-7 text-sm">
             <MarkdownContent content={value} />
         </div>
     </div>
