@@ -1,3 +1,4 @@
+from asyncio import proactor_events
 from models.trip import Trip
 from dotenv import load_dotenv
 import boto3
@@ -55,7 +56,19 @@ class BedrockService:
         return client
 
     @classmethod
-    def get_ai_recommendation(cls, trip: Trip):
+    def get_ai_recommendation(cls, trip: Trip | None, prompt: str = prompt_template):
+
+        if trip is not None:
+            prompt = prompt_template.format(
+                days = trip.days,
+                destination = trip.destination,
+                currency = trip.currency,
+                budget = trip.budget,
+                daily_budget = trip.daily_budget,
+                category = trip.category,
+                travel_style = trip.travel_style,
+                additional_context = trip.additional_context
+            )
 
         client = cls.get_client()
 
@@ -66,16 +79,7 @@ class BedrockService:
                     "role": "user",
                     "content": [
                         {
-                            "text": prompt_template.format(
-                                days = trip.days,
-                                destination = trip.destination,
-                                currency = trip.currency,
-                                budget = trip.budget,
-                                daily_budget = trip.daily_budget,
-                                category = trip.category,
-                                travel_style = trip.travel_style,
-                                additional_context = trip.additional_context
-                            )
+                            "text": prompt
                         }
                     ]
                 }
@@ -84,7 +88,10 @@ class BedrockService:
 
         ai_response = response["output"]["message"]["content"][0]["text"]
 
-        # Try to parse JSON response
+        if trip is None:
+            return ai_response
+
+        # Try to parse JSON response for trips
         try:
             # Remove markdown code blocks if present
             cleaned_response = ai_response.strip()
@@ -101,7 +108,7 @@ class BedrockService:
             structured_data = json.loads(cleaned_response)
             
             # Validate structure
-            if not all(key in structured_data for key in ["daily_itinerary", "travel_tips", "food_recommendations", "budget_breakdown"]):
+            if trip is not None and not all(key in structured_data for key in ["daily_itinerary", "travel_tips", "food_recommendations", "budget_breakdown"]):
                 raise ValueError("Missing required fields in AI response")
             
             return structured_data
@@ -109,6 +116,7 @@ class BedrockService:
         except (json.JSONDecodeError, ValueError) as e:
             # Fallback: return unstructured response in a basic structure
             print(f"Failed to parse AI response as JSON: {e}")
+            
             return {
                 "daily_itinerary": [],
                 "travel_tips": ai_response,

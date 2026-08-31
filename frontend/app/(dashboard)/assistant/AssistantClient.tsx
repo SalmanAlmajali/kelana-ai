@@ -1,9 +1,12 @@
 "use client";
 
 import { useState } from 'react';
-import { Button, Spinner } from '@heroui/react';
+import { Button, Card, Spinner } from '@heroui/react';
 import { SparklesIcon, ArrowUpIcon, FileTextIcon, AlertCircleIcon } from 'lucide-react';
 import { AssistantService, AssistantResponse } from '@/services/assistantService';
+import MarkdownContent from '@/components/MarkdownContent';
+import KelanaAI from '@/components/KelanaAI';
+import DashboardHeader from '@/components/DashboardHeader';
 
 export default function AssistantClient() {
   const [query, setQuery] = useState('');
@@ -32,32 +35,21 @@ export default function AssistantClient() {
     }
   };
 
-  const extractFilename = (uri?: string) => {
-    if (!uri) return 'document';
-    return uri.split('/').pop() || 'document';
-  };
-
   return (
     <div className="flex-1 flex flex-col items-center min-h-[calc(100vh-80px)] w-full max-w-4xl mx-auto py-8 sm:py-12 animate-fade-in text-center px-4">
 
       {/* Central Orb / Graphic */}
-      <div className="mb-8 relative w-24 h-24">
-        <div className="absolute inset-0 bg-linear-to-tr from-teal-500 to-emerald-400 rounded-full blur-2xl opacity-60 animate-pulse" />
-        <div className="relative w-full h-full bg-linear-to-tr from-teal-400 to-emerald-500 rounded-full shadow-[inset_0_-10px_20px_rgba(0,0,0,0.5)] flex items-center justify-center overflow-hidden">
-          <div className="absolute top-2 right-4 w-6 h-6 bg-white/40 rounded-full blur-sm" />
-          <SparklesIcon className="w-8 h-8 text-white relative z-10" />
-        </div>
-      </div>
+      <KelanaAI />
 
-      <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-white mb-6 sm:mb-10 tracking-tight text-center">
-        Ask KelanaAI<br />
-        <span className="text-zinc-400 text-lg sm:text-2xl mt-2 block">Powered by your trusted travel documents</span>
-      </h1>
+      <DashboardHeader
+        title="Ask KelanaAI"
+        subtitle="Powered by your trusted travel documents"
+      />
 
-      <div className="w-full max-w-2xl relative transition-all duration-500">
-        <div className="bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-2xl p-3 sm:p-4 shadow-2xl focus-within:border-teal-500/50 focus-within:bg-zinc-900 transition-all">
+      <div className="w-full relative transition-all duration-500">
+        <div className="bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-2xl p-3 sm:p-4 shadow-2xl focus-within:border-accent/50 focus-within:bg-zinc-900 transition-all">
           <div className="flex items-center gap-2 sm:gap-3 px-2">
-            <SparklesIcon className="w-5 h-5 text-teal-400 shrink-0" />
+            <SparklesIcon className="w-5 h-5 text-accent shrink-0" />
             <input
               type="text"
               placeholder="Can I bring medication into Japan?"
@@ -71,7 +63,7 @@ export default function AssistantClient() {
             />
             <Button
               variant="primary"
-              className="shrink-0 text-black bg-teal-400 hover:bg-teal-500"
+              className="shrink-0 text-black bg-accent hover:bg-accent-hover"
               size="sm"
               isPending={loading}
               onPress={handleAsk}
@@ -94,28 +86,41 @@ export default function AssistantClient() {
         )}
 
         {response && (
-          <div className="mt-8 bg-[#2C6E63] text-white rounded-xl overflow-hidden shadow-2xl animate-fade-in text-left border border-white/10">
-            <div className="p-6 sm:p-8 space-y-6">
+          <Card className="rounded-2xl mt-8 animate-fade-in text-left">
+            <Card.Content className="p-6 sm:p-8 space-y-6">
               <div>
                 <h3 className="font-bold text-sm tracking-wider uppercase text-white/90 mb-3">AI Answer</h3>
                 <p className="text-base sm:text-lg leading-relaxed">
-                  {response.response.content?.text || 'No relevant answer found in your documents.'}
+                  <MarkdownContent content={response.response.answer || 'No relevant answer found in your documents.'} />
                 </p>
               </div>
 
               <div className="h-px w-full bg-white/20" />
 
               <div>
-                <h3 className="font-bold text-sm tracking-wider uppercase text-white/90 mb-3">Source</h3>
-                <div className="flex items-center gap-2 text-white/90">
-                  <FileTextIcon className="w-5 h-5" />
-                  <span className="font-mono text-sm sm:text-base">
-                    {extractFilename(response.response.location?.s3Location?.uri)}
-                  </span>
+                <h3 className="font-bold text-sm tracking-wider uppercase text-white/90 mb-3">Sources</h3>
+                <div className="flex flex-col gap-2 text-white/90">
+                  {response.response.documents && response.response.documents.length > 0 ? (
+                    response.response.documents.map((doc, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <FileTextIcon className="w-5 h-5" />
+                        <span className="font-mono text-sm sm:text-base">
+                          {doc}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <span className="text-sm italic text-white/60">No sources cited</span>
+                  )}
                 </div>
               </div>
-            </div>
-          </div>
+            </Card.Content>
+          </Card>
+          // <div className="mt-8 text-white rounded-xl overflow-hidden shadow-2xl animate-fade-in text-left border border-white/10">
+          //   <div className="p-6 sm:p-8 space-y-6">
+
+          //   </div>
+          // </div>
         )}
 
         <div className="mt-12 text-zinc-500 text-sm">

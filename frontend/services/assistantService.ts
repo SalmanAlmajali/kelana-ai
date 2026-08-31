@@ -6,16 +6,8 @@ export interface AssistantResponse {
   data: {
     query: string;
     response: {
-      content: {
-        text: string;
-      };
-      location: {
-        type: string;
-        s3Location?: {
-          uri: string;
-        };
-      };
-      score: number;
+      answer: string;
+      documents: string[];
     };
   };
 }

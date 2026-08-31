@@ -5,6 +5,7 @@ import { Button } from "@heroui/react";
 import Link from 'next/link';
 import LogoutButton from './LogoutButton';
 import WelcomeMessage from './WelcomeMessage';
+import { CompassIcon } from 'lucide-react';
 
 export default function NavigationHeader() {
   const links = [
@@ -19,19 +20,7 @@ export default function NavigationHeader() {
           <Link href="/">
             <div className="flex items-center gap-x-2">
               <div className="flex size-8 items-center justify-center rounded-lg bg-primary shadow-lg text-black">
-                <svg
-                  className="size-5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <CompassIcon className='size-5' />
               </div>
               <p className="font-bold text-lg sm:text-xl text-white tracking-tight">KelanaAI</p>
             </div>
