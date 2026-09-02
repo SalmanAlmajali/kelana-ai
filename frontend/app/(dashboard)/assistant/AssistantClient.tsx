@@ -36,7 +36,7 @@ export default function AssistantClient() {
   };
 
   return (
-    <div className="flex-1 flex flex-col items-center min-h-[calc(100vh-80px)] w-full max-w-4xl mx-auto py-8 sm:py-12 animate-fade-in text-center px-4">
+    <div className="flex-1 flex flex-col items-center justify-center min-h-[calc(100vh-80px)] w-full max-w-4xl mx-auto py-8 sm:py-12 animate-fade-in">
 
       {/* Central Orb / Graphic */}
       <KelanaAI />

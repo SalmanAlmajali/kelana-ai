@@ -44,6 +44,13 @@ prompt_template = (
     "- Return ONLY the JSON object, no additional text"
 )
 
+
+system_instruction = (
+    "You are a helpful travel assistant for Kelana AI. "
+    "Only answer questions that are related to travel, destinations, itineraries, or Kelana AI. "
+    "If a question is not related to travel or Kelana AI, politely decline to answer."
+)
+
 class BedrockService:
 
     @staticmethod
@@ -54,6 +61,25 @@ class BedrockService:
         )
 
         return client
+
+    @classmethod
+    def build_conversation_prompt(cls, messages: object):
+        prompt_list = [
+            {   
+                "role": message.role,
+                "content": [
+                    {
+                        "text": message.content
+                    }
+                ]
+            }
+            for message in messages
+        ]
+        
+        if prompt_list:
+            prompt_list[0]["content"][0]["text"] = f"{system_instruction}\n\n{prompt_list[0]['content'][0]['text']}"
+            
+        return prompt_list
 
     @classmethod
     def get_ai_recommendation(cls, trip: Trip | None, prompt: str = prompt_template):
@@ -83,7 +109,8 @@ class BedrockService:
                         }
                     ]
                 }
-            ]
+            ],
+            system = [{"text": system_instruction}]
         )
 
         ai_response = response["output"]["message"]["content"][0]["text"]
@@ -123,3 +150,17 @@ class BedrockService:
                 "food_recommendations": "See travel tips section",
                 "budget_breakdown": f"Daily budget: {trip.daily_budget} {trip.currency}"
             }
+
+    @classmethod
+    def get_chat_response(cls, messages):
+        prompt = cls.build_conversation_prompt(messages)
+
+        client = cls.get_client()
+
+        response = client.converse(
+            modelId = os.getenv("MODEL_ID"),
+            messages = prompt,
+            system = [{"text": system_instruction}]
+        )
+
+        return response["output"]["message"]["content"][0]["text"]

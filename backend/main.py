@@ -1,3 +1,8 @@
+from services.bedrock_service import BedrockService
+from services.message_serivce import MessageService
+from models.request.message_request import MessageRequest
+from models.request.conversation_request import ConversationRequest
+from services.conversation_service import ConversationService
 from botocore.exceptions import ClientError
 from services.kb_service import KnowledgeBaseService
 from models.request.question_request import QuestionRequest
@@ -12,7 +17,7 @@ from fastapi import HTTPException, Request, status
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from database.database import SessionLocal, init_db
+from database.database import init_db
 from models.trip import Trip
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -197,6 +202,149 @@ def assist(requset: QuestionRequest, user: Annotated[User, Depends(UserService.g
             ) from exc
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error while querying knowledge base: {e}")
+
+@app.post("/api/v1/conversations", status_code=status.HTTP_201_CREATED)
+def create_conversation(request: ConversationRequest, user: Annotated[User, Depends(UserService.get_current_user)], db: Session = Depends(get_db)):
+    try:
+        new_conversation = ConversationService.store(request, user.id, db)
+        return {
+            "status": True,
+            "message": "Conversation created successfully",
+            "data": new_conversation
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+@app.get("/api/v1/conversations", status_code=status.HTTP_200_OK)
+def get_conversations(user: Annotated[User, Depends(UserService.get_current_user)], db: Session = Depends(get_db)):
+    try:
+        conversations = ConversationService.get_conversations(user.id, db)
+        return {
+            "status": True,
+            "message": "Conversations retrieved successfully",
+            "data": conversations
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+@app.get("/api/v1/conversations/{conversation_id}", status_code=status.HTTP_200_OK)
+def get_conversation(conversation_id: int, user: Annotated[User, Depends(UserService.get_current_user)], db: Session = Depends(get_db)):
+    try:
+        conversation = ConversationService.get_conversation(conversation_id, user.id, db)
+        return {
+            "status": True,
+            "message": "Conversation retrieved successfully",
+            "data": conversation
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+@app.put("/api/v1/conversations/{conversation_id}", status_code=status.HTTP_200_OK)
+def update_conversation(conversation_id: int, request: ConversationRequest, user: Annotated[User, Depends(UserService.get_current_user)], db: Session = Depends(get_db)):
+    try:
+        conversation = ConversationService.update_conversation(conversation_id, request, user.id, db)
+        return {
+            "status": True,
+            "message": "Conversation updated successfully",
+            "data": conversation
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+@app.delete("/api/v1/conversations/{conversation_id}", status_code=status.HTTP_200_OK)
+def delete_conversation(conversation_id: int, user: Annotated[User, Depends(UserService.get_current_user)], db: Session = Depends(get_db)):
+    try:
+        conversation = ConversationService.delete_conversation(conversation_id, user.id, db)
+        return {
+            "status": True,
+            "message": "Conversation deleted successfully",
+            "data": conversation
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+@app.post("/api/v1/conversations/{conversation_id}/messages", status_code=status.HTTP_201_CREATED)
+def send_message(conversation_id: int, request: MessageRequest, user: Annotated[User, Depends(UserService.get_current_user)], db: Session = Depends(get_db)):
+    try:
+        conversation = ConversationService.get_conversation(conversation_id, user.id, db)
+       
+        MessageService.store(request, conversation.id, "user", db)
+
+        messages = MessageService.get_messages(conversation.id, db)
+
+        ai_response = BedrockService.get_chat_response(messages)
+
+        new_ai_message = MessageService.store(ai_response, conversation.id, "assistant", db)
+        
+        return {
+            "status": True,
+            "message": "Message added successfully",
+            "data": new_ai_message
+        }
+    except ClientError as exc:
+        error = exc.response.get("Error", {})
+        error_code = error.get("Code", "BedrockError")
+        error_message = error.get("Message", "No error message returned")
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Bedrock request failed: {error_code} - {error_message}",
+        ) from exc
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+@app.get("/api/v1/conversations/{conversation_id}/messages", status_code=status.HTTP_200_OK)
+def get_messages(conversation_id: int, user: Annotated[User, Depends(UserService.get_current_user)], db: Session = Depends(get_db)):
+    try:
+        conversation = ConversationService.get_conversation(conversation_id, user.id, db)
+        messages = MessageService.get_messages(conversation.id, db)
+        return {
+            "status": True,
+            "message": "Messages retrieved successfully",
+            "data": messages
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+@app.get("/api/v1/conversations/{conversation_id}/messages/{message_id}", status_code=status.HTTP_200_OK)
+def get_message(conversation_id: int, message_id: int, user: Annotated[User, Depends(UserService.get_current_user)], db: Session = Depends(get_db)):
+    try:
+        conversation = ConversationService.get_conversation(conversation_id, user.id, db)
+
+        message = MessageService.get_message(message_id, conversation.id, db)
+        return {
+            "status": True,
+            "message": "Message retrieved successfully",
+            "data": message
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+@app.put("/api/v1/conversations/{conversation_id}/messages/{message_id}", status_code=status.HTTP_200_OK)
+def update_message(conversation_id: int, message_id: int, request: MessageRequest, user: Annotated[User, Depends(UserService.get_current_user)], db: Session = Depends(get_db)):
+    try:
+        conversation = ConversationService.get_conversation(conversation_id, user.id, db)
+        message = MessageService.update_message(message_id, conversation.id, request, db)
+        return {
+            "status": True,
+            "message": "Message updated successfully",
+            "data": message
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+@app.delete("/api/v1/conversations/{conversation_id}/messages/{message_id}", status_code=status.HTTP_200_OK)
+def delete_message(conversation_id: int, message_id: int, user: Annotated[User, Depends(UserService.get_current_user)], db: Session = Depends(get_db)):
+    try:
+        conversation = ConversationService.get_conversation(conversation_id, user.id, db)
+        message = MessageService.delete_message(message_id, conversation.id, db)
+        return {
+            "status": True,
+            "message": "Message deleted successfully",
+            "data": message
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 @app.get("/api/v1/trip-categories")
 def get_trip_categories():

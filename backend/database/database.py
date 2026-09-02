@@ -25,5 +25,7 @@ def init_db() -> None:
     
     import models.user
     import models.trip
+    import models.conversation
+    import models.message
 
     Base.metadata.create_all(bind=engine)

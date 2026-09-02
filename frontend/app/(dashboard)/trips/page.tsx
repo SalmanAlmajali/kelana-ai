@@ -36,7 +36,7 @@ const Trips = async () => {
                             Start planning your dream vacation by creating your first trip!
                         </p>
                         <Link href={'/profile'}>
-                            <Button color="primary" size="lg" className="font-medium">
+                            <Button variant="primary" size="lg" className="font-medium">
                                 Plan Your First Trip
                             </Button>
                         </Link>

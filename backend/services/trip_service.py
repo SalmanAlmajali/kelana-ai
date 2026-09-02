@@ -134,7 +134,6 @@ class TripService:
     @classmethod
     def get_trips(cls, user_id: int, db: Session) -> list[Trip]:
         try:
-            print(db.query(Trip).filter(Trip.user_id == user_id).all())
             return db.query(Trip).filter(
                 Trip.user_id == user_id
             ).all()
