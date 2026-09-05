@@ -314,7 +314,7 @@ export default function MobileNavDrawer({ user }: { user?: any }) {
               <Button variant="secondary" className="text-zinc-400 hover:text-white" onPress={deleteModalState.close}>
                 Cancel
               </Button>
-              <Button color="danger" onPress={handleDeleteConfirm} isPending={isDeleting}>
+              <Button variant="danger" onPress={handleDeleteConfirm} isPending={isDeleting}>
                 Delete
               </Button>
             </Modal.Footer>
